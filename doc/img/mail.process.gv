@@ -1,0 +1,10 @@
+digraph "mail.processFlow" {
+  rankdir="LR"
+  splines="ortho"
+  node [shape="box" style="rounded"]
+  start [label="" shape="circle"]
+  end [label="" shape="doublecircle"]
+ "start" -> "mail.send"
+ "mail.send" -> "end"
+
+}

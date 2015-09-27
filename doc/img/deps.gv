@@ -1,0 +1,26 @@
+digraph FlowDatabase {
+rankdir="LR"
+ flow -> activity [label="flow_target_fkey"];
+ state -> activity [label="state_activity_fkey"];
+ error -> activity [label="error_activity_fkey"];
+ log -> activity [label="log_activity_fkey"];
+ task -> activity [label="task_activity_fkey"];
+ flow -> activity [label="flow_source_fkey"];
+ call -> activity [label="call_activity_fkey"];
+ state -> branch [label="state_puid_fkey"];
+ flows -> branch [label="_RETURN"];
+ log -> instance [label="log_puid_fkey"];
+ call -> instance [label="call_puid_fkey"];
+ task -> instance [label="task_puid_fkey"];
+ error -> instance [label="error_puid_fkey"];
+ branch -> instance [label="branch_puid_fkey"];
+ flows -> instance [label="_RETURN"];
+ flow -> process [label="flow_process_fkey"];
+ input -> process [label="input_process_fkey"];
+ instance -> process [label="instance_process_fkey"];
+ flows -> state [label="_RETURN"];
+ dependencies -> database_objects [label="_RETURN"];
+ dependency_list -> dependencies [label="_RETURN"];
+ dependency_graph -> dependency_list [label="_RETURN"];
+
+}

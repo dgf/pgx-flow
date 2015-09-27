@@ -1,0 +1,10 @@
+digraph "log.processFlow" {
+  rankdir="LR"
+  splines="ortho"
+  node [shape="box" style="rounded"]
+  start [label="" shape="circle"]
+  end [label="" shape="doublecircle"]
+ "start" -> "log.log"
+ "log.log" -> "end"
+
+}

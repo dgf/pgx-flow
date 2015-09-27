@@ -1,0 +1,18 @@
+digraph "parallel.processFlow" {
+  rankdir="LR"
+  splines="ortho"
+  node [shape="box" style="rounded"]
+  start [label="" shape="circle"]
+  end [label="" shape="doublecircle"]
+ "start" -> "parallel.gateway1"
+ "parallel.gateway1" -> "parallel.log1b1g"
+ "parallel.log1b1g" -> "parallel.join1"
+ "parallel.gateway1" -> "parallel.gateway2"
+ "parallel.gateway2" -> "parallel.log2b1g"
+ "parallel.gateway2" -> "parallel.task2b2g"
+ "parallel.log2b1g" -> "parallel.join2"
+ "parallel.task2b2g" -> "parallel.join2"
+ "parallel.join2" -> "parallel.join1"
+ "parallel.join1" -> "end"
+
+}
