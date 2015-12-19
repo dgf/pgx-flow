@@ -1,6 +1,6 @@
 SET search_path TO flow, public;
 
-CREATE FUNCTION check_one(puid uuid, activity text, data json)
+CREATE FUNCTION check_one(instance uuid, activity text, data json)
   RETURNS boolean AS $$
   BEGIN
     IF (data->'check')::text::int = 1 THEN
@@ -11,7 +11,7 @@ CREATE FUNCTION check_one(puid uuid, activity text, data json)
   END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION check_two(puid uuid, activity text, data json)
+CREATE FUNCTION check_two(instance uuid, activity text, data json)
   RETURNS boolean AS $$
   BEGIN
     IF (data->'check')::text::int = 2 THEN
@@ -22,7 +22,7 @@ CREATE FUNCTION check_two(puid uuid, activity text, data json)
   END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION check_gt_one(puid uuid, activity text, data json)
+CREATE FUNCTION check_gt_one(instance uuid, activity text, data json)
   RETURNS boolean AS $$
   BEGIN
     IF (data->'check')::text::int > 1 THEN
@@ -40,7 +40,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('condition.process', 'a conditional process');
 
-    INSERT INTO activity (uri, proc  , async , description    , config) VALUES
+    INSERT INTO activity (uri, func  , async , description    , config) VALUES
       ('condition.gateway'   , 'log' , false , 'log gateway'  , '{"level":"INFO","message":"gateway branches"}'),
       ('condition.log1g'     , 'log' , false , 'log gate 1'   , '{"level":"INFO","message":"log gate 1"}'),
       ('condition.log2g1'    , 'log' , false , 'log gate 2 1' , '{"level":"INFO","message":"log gate 2 1"}'),
@@ -63,4 +63,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

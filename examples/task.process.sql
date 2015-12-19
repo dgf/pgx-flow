@@ -6,7 +6,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('task.process', 'a sequential process with one asynchronous task activity');
 
-    INSERT INTO activity (uri, proc, async, description, config) VALUES
+    INSERT INTO activity (uri, func, async, description, config) VALUES
       ('task.create', 'task', true, 'create a task', '{"group":"staff","subject":"confirm me"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
@@ -15,4 +15,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

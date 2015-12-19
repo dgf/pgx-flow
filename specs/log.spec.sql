@@ -13,10 +13,10 @@ DO $$
 
     BEGIN
       RAISE INFO 'TEST: process with one synchronous log activity';
-      INSERT INTO input (process, data) VALUES ('log.process', '{"check":"sequential log flow"}') RETURNING puid INTO pid;
+      INSERT INTO input (process, data) VALUES ('log.process', '{"check":"sequential log flow"}') RETURNING uid INTO pid;
 
       -- assert three acts in one branch
-      SELECT count(*) FROM state WHERE puid = pid AND branch = 0 AND await = false INTO acts;
+      SELECT count(*) FROM state WHERE instance = pid AND branch = 0 AND await = false INTO acts;
       IF acts = 3 THEN
         RAISE INFO 'OK: process % ends synchronous', pid;
       ELSE
@@ -27,4 +27,3 @@ DO $$
   END;
 $$;
 ROLLBACK;
-

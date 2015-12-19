@@ -7,7 +7,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('mail.process', 'a sequential process with one asynchronous mail activity');
 
-    INSERT INTO activity (uri, proc, async, description, config) VALUES
+    INSERT INTO activity (uri, func, async, description, config) VALUES
       ('mail.send', 'mail', true, 'send a mail', '{"to":"root@localhost","subject":"read me"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
@@ -16,4 +16,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

@@ -7,7 +7,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('http.process', 'a sequential process with one asynchronous http activity');
 
-    INSERT INTO activity (uri, proc, async, description, config) VALUES
+    INSERT INTO activity (uri, func, async, description, config) VALUES
       ('http.get', 'http', true, 'GET HTTP', '{"method":"get"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
@@ -16,4 +16,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

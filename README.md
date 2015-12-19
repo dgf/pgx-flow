@@ -35,6 +35,10 @@ import schema and default functions
 
     make flow
 
+start asynchronous notification handler
+
+    make run
+
 ## Development
 
 install example processes
@@ -50,4 +54,3 @@ run specifications
  * [flow-based programming](https://en.wikipedia.org/wiki/Flow-based_programming) (FBP)
  * [Dataflow programming](https://en.wikipedia.org/wiki/Dataflow_programming)
  * [Business Process Model and Notation](https://en.wikipedia.org/wiki/Business_Process_Model_and_Notation) (BPMN)
-

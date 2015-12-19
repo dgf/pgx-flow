@@ -12,16 +12,16 @@ CREATE TABLE process (
 CREATE TABLE instance (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL, -- DEFAULT uuid_generate_v4()
+  uid         uuid      DEFAULT uuid_generate_v4(),
   process     text      NOT NULL REFERENCES process(uri),
-  UNIQUE (puid)
+  UNIQUE (uid)
 );
 
 CREATE TABLE activity (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
   uri         text      NOT NULL,
-  proc        text      NOT NULL,
+  func        text      NOT NULL,
   async       boolean   DEFAULT false,
   config      json      NOT NULL,
   description text,
@@ -42,30 +42,30 @@ CREATE TABLE flow (
 
 CREATE TABLE branch (
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL REFERENCES instance(puid),
+  instance    uuid      NOT NULL REFERENCES instance(uid),
   num         int       NOT NULL,
   parent      int       CHECK (NOT NULL OR num = 0), -- branch 0 has no parent
   gates       int       NOT NULL DEFAULT 1,
-  label       text,  -- optional label
-  PRIMARY KEY (puid, num) -- only accept branch increments
+  label       text,  -- optional label of the flow
+  PRIMARY KEY (instance, num) -- only accept branch increments
 );
 
 CREATE TABLE state (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL,
+  instance    uuid      NOT NULL,
   branch      int       NOT NULL,
   activity    text      NOT NULL REFERENCES activity(uri),
   await       boolean   DEFAULT false,
   data        json      NOT NULL,
-  UNIQUE (puid, activity, branch), -- prefend endless loop
-  FOREIGN KEY (puid, branch) REFERENCES branch (puid, num)
+  UNIQUE (instance, activity, branch), -- prevent endless loop
+  FOREIGN KEY (instance, branch) REFERENCES branch (instance, num)
 );
 
 CREATE TABLE error (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL REFERENCES instance(puid),
+  instance    uuid      NOT NULL REFERENCES instance(uid),
   activity    text      NOT NULL REFERENCES activity(uri),
   data        json      NOT NULL
 );
@@ -75,23 +75,23 @@ CREATE TYPE status AS ENUM ('new', 'open', 'done');
 CREATE TABLE call (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  cuid        uuid      DEFAULT uuid_generate_v4(),
-  puid        uuid      NOT NULL REFERENCES instance(puid),
+  uid         uuid      DEFAULT uuid_generate_v4(),
+  instance    uuid      NOT NULL REFERENCES instance(uid),
   activity    text      NOT NULL REFERENCES activity(uri),
   status      status    NOT NULL DEFAULT 'new',
-  proc        text      NOT NULL,
+  func        text      NOT NULL,
   request     json      NOT NULL,
-  response    json,
-  UNIQUE(cuid)
+  response    json      CHECK (status <> 'done' OR NOT NULL),
+  UNIQUE(uid)
 );
 
 CREATE TABLE task (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL REFERENCES instance(puid),
+  instance    uuid      NOT NULL REFERENCES instance(uid),
   activity    text      NOT NULL REFERENCES activity(uri),
-  assignee    text      ,
-  agroup      text      ,
+  assignee    text,  -- optional assigned user
+  agroup      text,  -- optional assigned group
   status      status    NOT NULL DEFAULT 'new',
   subject     text      NOT NULL,
   data        json
@@ -100,16 +100,16 @@ CREATE TABLE task (
 CREATE TABLE input (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      DEFAULT uuid_generate_v4(),
+  uid         uuid      DEFAULT uuid_generate_v4(),
   process     text      NOT NULL REFERENCES process(uri),
   data        json      NOT NULL,
-  UNIQUE (puid)
+  UNIQUE (uid)
 );
 
 CREATE TABLE log (
   id          serial    PRIMARY KEY,
   created     timestamp DEFAULT now(),
-  puid        uuid      NOT NULL REFERENCES instance(puid),
+  instance    uuid      NOT NULL REFERENCES instance(uid),
   activity    text      NOT NULL REFERENCES activity(uri),
   level       text      NOT NULL,
   message     text      NOT NULL,
@@ -117,11 +117,10 @@ CREATE TABLE log (
 );
 
 CREATE VIEW flows AS (
-  SELECT i.puid, i.process
+  SELECT i.uid, i.process
   , b.num, b.parent
   , s.activity, s.await, s.data
   FROM instance i
-  JOIN state s ON s.puid = i.puid
-  JOIN branch b ON b.puid = i.puid AND b.num = s.branch
+  JOIN state s ON s.instance = i.uid
+  JOIN branch b ON b.instance = i.uid AND b.num = s.branch
 );
-

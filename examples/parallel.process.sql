@@ -6,7 +6,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('parallel.process', 'a parallel process with two gateways, some synchronous log activities and one asynchronous task activity');
 
-    INSERT INTO activity (uri, proc   , async , description            , config) VALUES
+    INSERT INTO activity (uri, func   , async , description            , config) VALUES
       ('parallel.gateway1'   , 'log'  , false , 'log gateway branch 1' , '{"level":"INFO","message":"parallel gateway branches 1"}'),
       ('parallel.log1b1g'    , 'log'  , false , 'log branch 1 gate 1'  , '{"level":"INFO","message":"parallel log branch 1 gate 1"}'),
       ('parallel.gateway2'   , 'log'  , false , 'log gateway branch 2' , '{"level":"INFO","message":"parallel gateway branches 2"}'),
@@ -29,4 +29,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

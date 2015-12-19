@@ -6,7 +6,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('log.process', 'a sequential process with one synchronous log activity');
 
-    INSERT INTO activity (uri, proc, description, config) VALUES
+    INSERT INTO activity (uri, func, description, config) VALUES
       ('log.log', 'log', 'log actual token data', '{"level":"INFO","message":"synchronous log call"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
@@ -15,4 +15,3 @@ DO $$
   END;
 $$;
 COMMIT;
-

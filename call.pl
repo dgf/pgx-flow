@@ -21,9 +21,9 @@ my $commands = {
 
 # SMTP client
 sub mail {
-  my $cuid = $_[0];
+  my $uid = $_[0];
   my $config  = $_[1];
-  warn "TBD send mail $cuid to $config->{'to'}: '$config->{'subject'}'";
+  warn "TBD send mail $uid to $config->{'to'}: '$config->{'subject'}'";
   return {
     status => 'ok',
     remote => '127.0.0.1'
@@ -35,9 +35,9 @@ use LWP::UserAgent;
 my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1 });
 
 sub http {
-  my $cuid = $_[0];
+  my $uid = $_[0];
   my $config  = $_[1];
-  warn "check http $config->{method} $config->{url}";
+  warn "http $config->{method} $config->{url}";
   my $res = undef;
   switch ($config->{method}) {
     case /get/i { $res = $ua->get($config->{url}); }
@@ -49,7 +49,6 @@ sub http {
       body => "unsupported method: $config->{method}"
     };
   } else {
-    warn "response " . Dumper($res);
     return {
       code => $res->{'_rc'},
       body => $res->{'_content'}
@@ -63,13 +62,13 @@ my $db = DBI->connect('dbi:Pg:dbname=' . $cfg{dbName}, $cfg{dbUser}, $cfg{dbPass
   AutoCommit => 1
 });
 my $selectCall = $db->prepare(qq{
-  SELECT request FROM flow.call WHERE cuid = :cuid AND status = 'new'
+  SELECT request FROM flow.call WHERE uid = :uid AND status = 'new'
 });
 my $startCall = $db->prepare(qq{
-  UPDATE flow.call SET status = 'open' WHERE cuid = :cuid
+  UPDATE flow.call SET status = 'open' WHERE uid = :uid
 });
 my $finishCall = $db->prepare(qq{
-  UPDATE flow.call SET status = 'done', response = :response WHERE cuid = :cuid
+  UPDATE flow.call SET status = 'done', response = :response WHERE uid = :uid
 });
 $db->do('LISTEN call');
 
@@ -89,21 +88,21 @@ while ($sel->can_read) {
     } else {
 
       # find and call command
-      my $proc = $data->{'proc'};
-      if (not $proc) {
-        warn "proc reference not found: $payload";
+      my $func = $data->{'func'};
+      if (not $func) {
+        warn "func reference not found: $payload";
       } else {
-        my $command = $commands->{$proc};
+        my $command = $commands->{$func};
         if (not $command) {
-          warn "unknown proc: $payload";
+          warn "unknown func: $payload";
         } else {
-          my $cuid = $data->{'cuid'};
-          if (not $cuid) {
+          my $uid = $data->{'uid'};
+          if (not $uid) {
             warn "call without reference: $payload";
           } else {
 
             # fetch and validate results
-            $selectCall->bind_param(":cuid", $cuid);
+            $selectCall->bind_param(":uid", $uid);
             $selectCall->execute();
             my @row = $selectCall->fetchrow_array();
             if (not @row) {
@@ -113,13 +112,12 @@ while ($sel->can_read) {
             } else {
 
               # call command
-              $startCall->bind_param(":cuid", $cuid);
+              $startCall->bind_param(":uid", $uid);
               $startCall->execute();
-              my $response = encode_json($command->($cuid, decode_json($row[0])));
+              my $response = encode_json($command->($uid, decode_json($row[0])));
 
               # update response status
-              warn "send response $response";
-              $finishCall->bind_param(":cuid", $cuid);
+              $finishCall->bind_param(":uid", $uid);
               $finishCall->bind_param(":response", $response);
               $finishCall->execute();
             }
@@ -129,4 +127,3 @@ while ($sel->can_read) {
     }
   }
 };
-
