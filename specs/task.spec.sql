@@ -13,10 +13,13 @@ DO $$
 
     BEGIN
       RAISE INFO 'TEST: start process with one asynchronous task activity';
-      INSERT INTO input (process, data) VALUES ('task.process', '{"confirm":"this"}') RETURNING uid INTO pid;
+      INSERT INTO input (process, data)
+      VALUES ('task.example', '{"confirm":"this"}')
+      RETURNING uid INTO pid;
 
       -- assert waiting activity
-      SELECT count(*) FROM state WHERE instance = pid AND await = true AND activity = 'task.create' INTO acts;
+      SELECT count(*) INTO acts FROM state
+      WHERE instance = pid AND await = true AND activity = 'confirm';
       IF acts = 1 THEN
         RAISE INFO 'OK: process % awaits activity result', pid;
       ELSE
@@ -24,7 +27,8 @@ DO $$
       END IF;
 
       -- assert new task
-      SELECT count(*) FROM task WHERE instance = pid AND status = 'new' INTO acts;
+      SELECT count(*) INTO acts FROM task
+      WHERE instance = pid AND status = 'new';
       IF acts = 1 THEN
         RAISE INFO 'OK: process % has one open task', pid;
       ELSE
@@ -34,10 +38,12 @@ DO $$
 
     BEGIN
       RAISE INFO 'TEST: confirm asynchronous task';
-      UPDATE task SET status = 'done', data = '{"confirm":"done"}' WHERE instance = pid AND activity = 'task.create';
+      UPDATE task SET status = 'done', data = '{"confirm":"done"}'
+      WHERE instance = pid AND activity = 'confirm';
 
       -- assert synchronous process ending
-      SELECT count(*) FROM state WHERE instance = pid AND await = false INTO acts;
+      SELECT count(*) INTO acts FROM state
+      WHERE instance = pid AND await = false;
       IF acts = 3 THEN
         RAISE INFO 'OK: process % ends synchronous', pid;
       ELSE

@@ -5,14 +5,16 @@ DO $$
   BEGIN
 
     INSERT INTO process (uri, description) VALUES
-      ('mail.process', 'a sequential process with one asynchronous mail activity');
+      ('mail.example', 'a sequential process with one asynchronous mail activity');
 
-    INSERT INTO activity (uri, func, async, description, config) VALUES
-      ('mail.send', 'mail', true, 'send a mail', '{"to":"root@localhost","subject":"read me"}');
+    INSERT INTO activity (process, uri, func, async, description, config) VALUES
+      ('mail.example', 'start', 'log', false, 'log start', '{"level":"INFO","message":"start mail example process"}'),
+      ('mail.example', 'send', 'mail', true, 'send a mail', '{"to":"root@localhost","subject":"read me"}'),
+      ('mail.example', 'end', 'log', false, 'log end', '{"level":"INFO","message":"end mail example process"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
-      ('mail.process', 'start', 'mail.send', 'start to mail'),
-      ('mail.process', 'mail.send', 'end', 'mail to end');
+      ('mail.example', 'start', 'send', 'start to mail'),
+      ('mail.example', 'send', 'end', 'mail to end');
   END;
 $$;
 COMMIT;

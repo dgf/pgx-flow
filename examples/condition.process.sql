@@ -38,28 +38,30 @@ DO $$
   BEGIN
 
     INSERT INTO process (uri, description) VALUES
-      ('condition.process', 'a conditional process');
+      ('condition.example', 'a conditional process');
 
-    INSERT INTO activity (uri, func  , async , description    , config) VALUES
-      ('condition.gateway'   , 'log' , false , 'log gateway'  , '{"level":"INFO","message":"gateway branches"}'),
-      ('condition.log1g'     , 'log' , false , 'log gate 1'   , '{"level":"INFO","message":"log gate 1"}'),
-      ('condition.log2g1'    , 'log' , false , 'log gate 2 1' , '{"level":"INFO","message":"log gate 2 1"}'),
-      ('condition.log2g2'    , 'log' , false , 'log gate 2 2' , '{"level":"INFO","message":"log gate 2 2"}'),
-      ('condition.log3g1'    , 'log' , false , 'log gate 3 1' , '{"level":"INFO","message":"log gate 3 1"}'),
-      ('condition.log3g2'    , 'log' , false , 'log gate 3 2' , '{"level":"INFO","message":"log gate 3 2"}'),
-      ('condition.join'      , 'log' , false , 'log join'     , '{"level":"INFO","message":"join gates of branch"}');
+    INSERT INTO activity (process, uri, func  , async , description    , config) VALUES
+      ('condition.example', 'start'   , 'log' , false , 'log start'    , '{"level":"INFO","message":"start conditional example process"}'),
+      ('condition.example', 'gateway' , 'log' , false , 'log gateway'  , '{"level":"INFO","message":"gateway branches"}'),
+      ('condition.example', 'log1g'   , 'log' , false , 'log gate 1'   , '{"level":"INFO","message":"log gate 1"}'),
+      ('condition.example', 'log2g1'  , 'log' , false , 'log gate 2 1' , '{"level":"INFO","message":"log gate 2 1"}'),
+      ('condition.example', 'log2g2'  , 'log' , false , 'log gate 2 2' , '{"level":"INFO","message":"log gate 2 2"}'),
+      ('condition.example', 'log3g1'  , 'log' , false , 'log gate 3 1' , '{"level":"INFO","message":"log gate 3 1"}'),
+      ('condition.example', 'log3g2'  , 'log' , false , 'log gate 3 2' , '{"level":"INFO","message":"log gate 3 2"}'),
+      ('condition.example', 'join'    , 'log' , false , 'log join'     , '{"level":"INFO","message":"join gates of branch"}'),
+      ('condition.example', 'end'     , 'log' , false , 'log end data' , '{"level":"INFO","message":"end conditional example process"}');
 
-    INSERT INTO flow (process, source              , target              , label , condition      , description) VALUES
-      ('condition.process'   , 'start'             , 'condition.gateway' , NULL  ,NULL           , 'start to gateway'),
-      ('condition.process'   , 'condition.gateway' , 'condition.log1g'   , 'one' ,'check_one'    , 'gateway to log gate 1'),
-      ('condition.process'   , 'condition.gateway' , 'condition.log2g1'  , 'two' ,'check_two'    , 'gateway to log gate 2 1'),
-      ('condition.process'   , 'condition.log2g1'  , 'condition.log2g2'  , NULL  ,NULL           , 'gateway to log gate 2 2'),
-      ('condition.process'   , 'condition.gateway' , 'condition.log3g1'  , 'gto' ,'check_gt_one' , 'gateway to log gate 3 1'),
-      ('condition.process'   , 'condition.log3g1'  , 'condition.log3g2'  , NULL  ,NULL           , 'gateway to log gate 3 2'),
-      ('condition.process'   , 'condition.log1g'   , 'condition.join'    , NULL  ,NULL           , 'join gate 1'),
-      ('condition.process'   , 'condition.log2g2'  , 'condition.join'    , NULL  ,NULL           , 'join gate 2'),
-      ('condition.process'   , 'condition.log3g2'  , 'condition.join'    , NULL  ,NULL           , 'join gate 3'),
-      ('condition.process'   , 'condition.join'    , 'end'               , NULL  ,NULL           , 'branch 1 to end');
+    INSERT INTO flow (process, source    , target    , label , condition      , description) VALUES
+      ('condition.example'   , 'start'   , 'gateway' , NULL  ,NULL           , 'start to gateway'),
+      ('condition.example'   , 'gateway' , 'log1g'   , 'one' ,'check_one'    , 'gateway to log gate 1'),
+      ('condition.example'   , 'gateway' , 'log2g1'  , 'two' ,'check_two'    , 'gateway to log gate 2 1'),
+      ('condition.example'   , 'log2g1'  , 'log2g2'  , NULL  ,NULL           , 'gateway to log gate 2 2'),
+      ('condition.example'   , 'gateway' , 'log3g1'  , 'gto' ,'check_gt_one' , 'gateway to log gate 3 1'),
+      ('condition.example'   , 'log3g1'  , 'log3g2'  , NULL  ,NULL           , 'gateway to log gate 3 2'),
+      ('condition.example'   , 'log1g'   , 'join'    , NULL  ,NULL           , 'join gate 1'),
+      ('condition.example'   , 'log2g2'  , 'join'    , NULL  ,NULL           , 'join gate 2'),
+      ('condition.example'   , 'log3g2'  , 'join'    , NULL  ,NULL           , 'join gate 3'),
+      ('condition.example'   , 'join'    , 'end'     , NULL  ,NULL           , 'branch 1 to end');
   END;
 $$;
 COMMIT;

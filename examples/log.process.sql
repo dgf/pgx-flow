@@ -4,14 +4,16 @@ DO $$
   BEGIN
 
     INSERT INTO process (uri, description) VALUES
-      ('log.process', 'a sequential process with one synchronous log activity');
+      ('log.example', 'a sequential process with one synchronous log activity');
 
-    INSERT INTO activity (uri, func, description, config) VALUES
-      ('log.log', 'log', 'log actual token data', '{"level":"INFO","message":"synchronous log call"}');
+    INSERT INTO activity (process, uri, func, description, config) VALUES
+      ('log.example', 'start', 'log', 'log start data', '{"level":"INFO","message":"start log example process"}'),
+      ('log.example', 'call', 'log', 'log actual token data', '{"level":"INFO","message":"synchronous log call"}'),
+      ('log.example', 'end', 'log', 'log end data', '{"level":"INFO","message":"end log example process"}');
 
     INSERT INTO flow (process, source, target, description) VALUES
-      ('log.process', 'start', 'log.log', 'start to log'),
-      ('log.process', 'log.log', 'end', 'log to end');
+      ('log.example', 'start', 'call', 'start to log'),
+      ('log.example', 'call', 'end', 'log to end');
   END;
 $$;
 COMMIT;
