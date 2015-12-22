@@ -1,10 +1,10 @@
-digraph "task.processFlow" {
+digraph "http.exampleFlow" {
   rankdir="LR"
   splines="ortho"
   node [shape="box" style="rounded"]
   start [label="" shape="circle"]
   end [label="" shape="doublecircle"]
- "start" -> "task.create"
- "task.create" -> "end"
+ "start" -> "get" [label=""];
+ "get" -> "end" [label=""];
 
 }

@@ -1,10 +1,10 @@
-digraph "log.processFlow" {
+digraph "task.exampleFlow" {
   rankdir="LR"
   splines="ortho"
   node [shape="box" style="rounded"]
   start [label="" shape="circle"]
   end [label="" shape="doublecircle"]
- "start" -> "log.log"
- "log.log" -> "end"
+ "start" -> "confirm" [label=""];
+ "confirm" -> "end" [label=""];
 
 }

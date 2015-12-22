@@ -1,10 +1,10 @@
-digraph "http.processFlow" {
+digraph "mail.exampleFlow" {
   rankdir="LR"
   splines="ortho"
   node [shape="box" style="rounded"]
   start [label="" shape="circle"]
   end [label="" shape="doublecircle"]
- "start" -> "http.get"
- "http.get" -> "end"
+ "start" -> "send" [label=""];
+ "send" -> "end" [label=""];
 
 }

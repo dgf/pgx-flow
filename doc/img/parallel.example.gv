@@ -1,0 +1,18 @@
+digraph "parallel.exampleFlow" {
+  rankdir="LR"
+  splines="ortho"
+  node [shape="box" style="rounded"]
+  start [label="" shape="circle"]
+  end [label="" shape="doublecircle"]
+ "start" -> "gateway1" [label=""];
+ "gateway1" -> "log1b1g" [label="one"];
+ "log1b1g" -> "join1" [label=""];
+ "gateway1" -> "gateway2" [label="two"];
+ "gateway2" -> "log2b1g" [label="three"];
+ "gateway2" -> "task2b2g" [label="four"];
+ "log2b1g" -> "join2" [label=""];
+ "task2b2g" -> "join2" [label=""];
+ "join2" -> "join1" [label=""];
+ "join1" -> "end" [label=""];
+
+}

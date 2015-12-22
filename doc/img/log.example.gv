@@ -1,10 +1,10 @@
-digraph "mail.processFlow" {
+digraph "log.exampleFlow" {
   rankdir="LR"
   splines="ortho"
   node [shape="box" style="rounded"]
   start [label="" shape="circle"]
   end [label="" shape="doublecircle"]
- "start" -> "mail.send"
- "mail.send" -> "end"
+ "start" -> "call" [label=""];
+ "call" -> "end" [label=""];
 
 }

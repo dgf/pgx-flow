@@ -1,0 +1,20 @@
+digraph "condition.exampleFlow" {
+  rankdir="LR"
+  splines="ortho"
+  node [shape="box" style="rounded"]
+  start [label="" shape="circle"]
+  end [label="" shape="doublecircle"]
+ "start" -> "gateway" [label=""];
+ "gateway" -> "log1g" [label="one"];
+ "gateway" -> "log2g1" [label="two"];
+ "log2g1" -> "log2g2" [label=""];
+ "gateway" -> "log3g1" [label="gto"];
+ "log3g1" -> "log3g2" [label=""];
+ "gateway" -> "log4g" [label="default"];
+ "log1g" -> "join" [label=""];
+ "log2g2" -> "join" [label=""];
+ "log3g2" -> "join" [label=""];
+ "log4g" -> "join" [label=""];
+ "join" -> "end" [label=""];
+
+}
