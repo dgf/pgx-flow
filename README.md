@@ -39,6 +39,10 @@ start asynchronous notification handler
 
     make run
 
+import BPMN process
+
+    make import bpmn=examples/check.bpmn
+
 ## Development
 
 install example processes

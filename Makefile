@@ -33,7 +33,7 @@ flow: act      # install flow triggers and functions
 run:           # start asynchronous notification handler
 	perl call.pl
 
-import: $(bpmn)       # import BPMN
+import: $(bpmn)# import BPMN
 	bin/import.sh $(dbName) $(shell pwd)/$(bpmn)
 
 #:

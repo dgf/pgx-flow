@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="bpmnSupport" name="BPMN Support Process" isExecutable="false">
+    <bpmn:documentation>This process demonstrates all supported BPMN elements.</bpmn:documentation>
+    <bpmn:startEvent id="start" name="start">
+      <bpmn:outgoing>start2parallel</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="start2parallel" sourceRef="start" targetRef="parallelStart" />
+    <bpmn:endEvent id="end" name="end">
+      <bpmn:incoming>parallel2end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="exclusive2parallel" sourceRef="exclusiveEnd" targetRef="parallelEnd" />
+    <bpmn:sequenceFlow id="log2http" sourceRef="logBranchOne" targetRef="httpRequest" />
+    <bpmn:userTask id="taskOne" name="task 1">
+      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 1"}]]></bpmn:documentation>
+      <bpmn:incoming>http2taskOne</bpmn:incoming>
+      <bpmn:outgoing>one2parallel</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="taskTwo" name="task 2">
+      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 2"}]]></bpmn:documentation>
+      <bpmn:incoming>exclusive2two</bpmn:incoming>
+      <bpmn:outgoing>two2exclusive</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="taskThree" name="task 3">
+      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 3"}]]></bpmn:documentation>
+      <bpmn:incoming>exclusive2three</bpmn:incoming>
+      <bpmn:outgoing>three2exclusive</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="logBranchOne" name="log branch 1" camunda:delegateExpression="log">
+      <bpmn:documentation><![CDATA[{"level":"INFO","message":"log branch 1"} ]]></bpmn:documentation>
+      <bpmn:incoming>parallel2logOne</bpmn:incoming>
+      <bpmn:outgoing>log2http</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="parallel2logOne" sourceRef="parallelStart" targetRef="logBranchOne" />
+    <bpmn:sequenceFlow id="parallel2logTwo" sourceRef="parallelStart" targetRef="logBranchTwo" />
+    <bpmn:sequenceFlow id="exclusive2three" name="&#62; 1" sourceRef="exclusiveStart" targetRef="taskThree">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[count > 1]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="log2exclusive" sourceRef="logBranchTwo" targetRef="exclusiveStart" />
+    <bpmn:serviceTask id="logBranchTwo" name="log branch 2" camunda:delegateExpression="log">
+      <bpmn:documentation><![CDATA[{"level":"INFO","message":"log branch 2"} ]]></bpmn:documentation>
+      <bpmn:incoming>parallel2logTwo</bpmn:incoming>
+      <bpmn:outgoing>log2exclusive</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="two2exclusive" sourceRef="taskTwo" targetRef="exclusiveEnd" />
+    <bpmn:sequenceFlow id="three2exclusive" sourceRef="taskThree" targetRef="exclusiveEnd" />
+    <bpmn:sequenceFlow id="parallel2end" sourceRef="parallelEnd" targetRef="end" />
+    <bpmn:sequenceFlow id="one2parallel" sourceRef="taskOne" targetRef="parallelEnd" />
+    <bpmn:sequenceFlow id="exclusive2two" name="= 2" sourceRef="exclusiveStart" targetRef="taskTwo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">count = 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="http2taskOne" sourceRef="httpRequest" targetRef="taskOne" />
+    <bpmn:serviceTask id="httpRequest" name="async http request" camunda:type="external" camunda:topic="http">
+      <bpmn:documentation><![CDATA[{"method":"get"}]]></bpmn:documentation>
+      <bpmn:incoming>log2http</bpmn:incoming>
+      <bpmn:outgoing>http2taskOne</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="parallelStart">
+      <bpmn:incoming>start2parallel</bpmn:incoming>
+      <bpmn:outgoing>parallel2logTwo</bpmn:outgoing>
+      <bpmn:outgoing>parallel2logOne</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="parallelEnd">
+      <bpmn:incoming>one2parallel</bpmn:incoming>
+      <bpmn:incoming>exclusive2parallel</bpmn:incoming>
+      <bpmn:outgoing>parallel2end</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:exclusiveGateway id="exclusiveStart" default="exclusive2four">
+      <bpmn:incoming>log2exclusive</bpmn:incoming>
+      <bpmn:outgoing>exclusive2three</bpmn:outgoing>
+      <bpmn:outgoing>exclusive2two</bpmn:outgoing>
+      <bpmn:outgoing>exclusive2four</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="exclusiveEnd">
+      <bpmn:incoming>two2exclusive</bpmn:incoming>
+      <bpmn:incoming>three2exclusive</bpmn:incoming>
+      <bpmn:incoming>four2exclusive</bpmn:incoming>
+      <bpmn:outgoing>exclusive2parallel</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="exclusive2four" name="&#60; 2" sourceRef="exclusiveStart" targetRef="taskFour" />
+    <bpmn:sequenceFlow id="four2exclusive" sourceRef="taskFour" targetRef="exclusiveEnd" />
+    <bpmn:userTask id="taskFour" name="task 4">
+      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 4"}]]></bpmn:documentation>
+      <bpmn:incoming>exclusive2four</bpmn:incoming>
+      <bpmn:outgoing>four2exclusive</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="bpmnSupport">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="start">
+        <dc:Bounds x="12" y="33" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="-15" y="69" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1oytpyb_di" bpmnElement="start2parallel">
+        <di:waypoint xsi:type="dc:Point" x="48" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="108" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="103" y="41" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_13oxwf0_di" bpmnElement="end">
+        <dc:Bounds x="860" y="33" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="833" y="69" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0qbxqfx_di" bpmnElement="exclusive2parallel">
+        <di:waypoint xsi:type="dc:Point" x="775" y="273" />
+        <di:waypoint xsi:type="dc:Point" x="802" y="273" />
+        <di:waypoint xsi:type="dc:Point" x="802" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1319" y="41" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1798hgv_di" bpmnElement="log2http">
+        <di:waypoint xsi:type="dc:Point" x="323" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="394" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="482" y="37" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0icfd1j_di" bpmnElement="taskOne">
+        <dc:Bounds x="556" y="11" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1ro7t7k_di" bpmnElement="taskTwo">
+        <dc:Bounds x="556" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0paeyba_di" bpmnElement="taskThree">
+        <dc:Bounds x="556" y="233" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1pd8u2u_di" bpmnElement="logBranchOne">
+        <dc:Bounds x="223" y="11" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_06lsmp3_di" bpmnElement="parallel2logOne">
+        <di:waypoint xsi:type="dc:Point" x="158" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="223" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="259" y="41" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0c9q6di_di" bpmnElement="parallel2logTwo">
+        <di:waypoint xsi:type="dc:Point" x="133" y="76" />
+        <di:waypoint xsi:type="dc:Point" x="133" y="168" />
+        <di:waypoint xsi:type="dc:Point" x="223" y="168" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="207" y="95" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mf7dyx_di" bpmnElement="exclusive2three">
+        <di:waypoint xsi:type="dc:Point" x="469" y="273" />
+        <di:waypoint xsi:type="dc:Point" x="556" y="273" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="496" y="279" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1qnbbuu_di" bpmnElement="log2exclusive">
+        <di:waypoint xsi:type="dc:Point" x="273" y="208" />
+        <di:waypoint xsi:type="dc:Point" x="273" y="269" />
+        <di:waypoint xsi:type="dc:Point" x="419" y="269" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="320" y="179" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0macz52_di" bpmnElement="logBranchTwo">
+        <dc:Bounds x="223" y="128" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_10wg8ze_di" bpmnElement="two2exclusive">
+        <di:waypoint xsi:type="dc:Point" x="656" y="168" />
+        <di:waypoint xsi:type="dc:Point" x="750" y="168" />
+        <di:waypoint xsi:type="dc:Point" x="750" y="248" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="179" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bk2woh_di" bpmnElement="three2exclusive">
+        <di:waypoint xsi:type="dc:Point" x="656" y="273" />
+        <di:waypoint xsi:type="dc:Point" x="725" y="273" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="234" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1w5miok_di" bpmnElement="parallel2end">
+        <di:waypoint xsi:type="dc:Point" x="827" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="860" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="871" y="95" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1y7pl6a_di" bpmnElement="one2parallel">
+        <di:waypoint xsi:type="dc:Point" x="656" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="777" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="673" y="41" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0isqnft_di" bpmnElement="exclusive2two">
+        <di:waypoint xsi:type="dc:Point" x="444" y="248" />
+        <di:waypoint xsi:type="dc:Point" x="444" y="168" />
+        <di:waypoint xsi:type="dc:Point" x="556" y="168" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="497" y="170" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0u92qxj_di" bpmnElement="http2taskOne">
+        <di:waypoint xsi:type="dc:Point" x="494" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="556" y="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="465" y="41" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1roilpi_di" bpmnElement="httpRequest">
+        <dc:Bounds x="394" y="11" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0jlk0y0_di" bpmnElement="parallelStart">
+        <dc:Bounds x="108" y="26" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="88" y="4" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_16f39pk_di" bpmnElement="parallelEnd">
+        <dc:Bounds x="777" y="26" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="757" y="76" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_092qii3_di" bpmnElement="exclusiveStart" isMarkerVisible="true">
+        <dc:Bounds x="419" y="248" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="399" y="298" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_148tu21_di" bpmnElement="exclusiveEnd" isMarkerVisible="true">
+        <dc:Bounds x="725" y="248" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="705" y="298" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ohogvf_di" bpmnElement="exclusive2four">
+        <di:waypoint xsi:type="dc:Point" x="444" y="298" />
+        <di:waypoint xsi:type="dc:Point" x="444" y="382" />
+        <di:waypoint xsi:type="dc:Point" x="556" y="382" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="495" y="386" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_09ia8ts_di" bpmnElement="four2exclusive">
+        <di:waypoint xsi:type="dc:Point" x="656" y="382" />
+        <di:waypoint xsi:type="dc:Point" x="750" y="382" />
+        <di:waypoint xsi:type="dc:Point" x="750" y="298" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="660" y="428" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1dyogut_di" bpmnElement="taskFour">
+        <dc:Bounds x="556" y="342" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
