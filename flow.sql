@@ -68,13 +68,13 @@ CREATE FUNCTION close_activity()
     bl text;
     bn int;
     data json;
-    go boolean;
     next flow;
     parent branch;
     prev_count int;
     prev flow;
     uri text;
     steps flow[];
+    checks flow[];
     wait boolean;
   BEGIN
     IF TG_TABLE_NAME != 'state' OR TG_OP != 'UPDATE' THEN
@@ -83,22 +83,28 @@ CREATE FUNCTION close_activity()
       SELECT process INTO uri FROM instance
       WHERE uid = NEW.instance;
 
-      -- check condition of next flow steps
-      FOR next IN SELECT * FROM flow
-      WHERE process = uri AND source = NEW.activity
+      -- check expression of next flow steps
+      FOR next IN SELECT * FROM flow f
+      WHERE f.process = uri AND f.source = NEW.activity AND f.expression IS NOT NULL
       LOOP
-        IF next.condition IS NULL THEN
-          go := true;
-        ELSE
-          EXECUTE 'SELECT * FROM ' || quote_ident(next.condition) || '($1,$2,$3)' INTO go
-          USING NEW.instance, NEW.activity, NEW.data;
-        END IF;
-        IF go THEN
+        checks := array_append(checks, next);
+        IF evaluate(next.expression, NEW.data) THEN
           steps := array_append(steps, next);
         END IF;
       END LOOP;
 
-      -- keep the flow
+      -- sequential or parallel
+      IF checks IS NULL THEN
+        SELECT array_agg(f) INTO steps FROM flow f
+        WHERE f.process = uri AND f.source = NEW.activity AND f.expression IS NULL;
+
+      -- conditional default flow?
+      ELSEIF steps IS NULL THEN
+        SELECT array_agg(f) INTO steps FROM flow f
+        WHERE f.process = uri AND f.source = NEW.activity AND f.expression IS NULL;
+      END IF;
+
+      --  keep the flow
       IF array_length(steps, 1) > 0 THEN
 
         -- remember branch count

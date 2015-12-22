@@ -31,7 +31,7 @@ CREATE TABLE flow (
   source      text      NOT NULL,
   target      text      NOT NULL,
   label       text,  -- label of a branch
-  condition   text,  -- SQL function
+  expression  text,  -- conditional expression, see specs/expression.spec.sql
   description text,
   created     timestamp DEFAULT now(),
   PRIMARY KEY (process, source, target),
@@ -148,6 +148,34 @@ CREATE FUNCTION log_state(instance uuid, activity text, branch int, await boolea
     INSERT INTO state (instance, process, activity, branch, await, data)
     VALUES (instance, process_uri(instance), activity, branch, await, data);
     RETURN;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION evaluate(expression text, data json)
+  RETURNS boolean AS $$
+  DECLARE
+    e text[];
+    p text[];
+    path text;
+    comp text;
+    value text;
+  BEGIN
+    e := regexp_matches(expression, '([\w.]+)\s*([!=<>]+)\s*(\w+)');
+    path := e[1];
+    comp := e[2];
+    value := e[3];
+    p := regexp_split_to_array(path, '\.');
+    IF comp = '=' THEN
+      RETURN data#>>p = value;
+    ELSEIF comp = '!=' THEN
+      RETURN data#>>p != value;
+    ELSEIF comp = '<' THEN
+      RETURN data#>>p < value;
+    ELSEIF comp = '>' THEN
+      RETURN data#>>p > value;
+    ELSE
+      RAISE 'unsupported "%" comparator in expression "%"', comp, expression;
+    END IF;
   END;
 $$ LANGUAGE plpgsql;
 

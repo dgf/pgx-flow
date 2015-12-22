@@ -33,6 +33,9 @@ flow: act      # install flow triggers and functions
 run:           # start asynchronous notification handler
 	perl call.pl
 
+import: $(bpmn)       # import BPMN
+	bin/import.sh $(dbName) $(shell pwd)/$(bpmn)
+
 #:
 #: Development
 #:
@@ -42,10 +45,13 @@ cli:           # open psql terminal
 
 processes = log task mail http parallel condition
 
+specs = expression
+
 examples: flow # install example processes
 	$(foreach process, $(processes), psql $(dbName) -f examples/$(process).process.sql;)
 
 test: examples # run specifications
+	$(foreach spec, $(specs), psql $(dbName) -f specs/$(spec).spec.sql 2>&1 | ./reporter.awk;)
 	$(foreach process, $(processes), psql $(dbName) -f specs/$(process).spec.sql 2>&1 | ./reporter.awk;)
 
 viz:           # install dependency analyzer and flow vizualisation
@@ -54,4 +60,4 @@ viz:           # install dependency analyzer and flow vizualisation
 
 doc: viz       # export ERD and flow diagrams
 	bin/deps.sh $(dbName) $(shell pwd)/doc/img/deps
-	$(foreach process, $(processes), bin/viz.sh $(dbName) $(shell pwd)/doc/img $(process).process;)
+	$(foreach process, $(processes), bin/viz.sh $(dbName) $(shell pwd)/doc/img $(process).example;)
