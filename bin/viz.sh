@@ -13,5 +13,6 @@ digraph "${process}Flow" {
   end [label="" shape="doublecircle"]
 EOF
 psql ${dbName} -t -c "SELECT * FROM viz.dot_process('${process}')" >> ${fName}.gv
+echo "create ${fName}.svg file"
 echo "}" >> ${fName}.gv
 dot -Tsvg ${fName}.gv -o ${fName}.svg

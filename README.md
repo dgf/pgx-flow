@@ -39,10 +39,6 @@ start asynchronous notification handler
 
     make run
 
-import BPMN process
-
-    make import bpmn=examples/check.bpmn
-
 ## Development
 
 install example processes
@@ -52,6 +48,26 @@ install example processes
 run specifications
 
     make test
+
+update documentation images
+
+    make doc
+
+## BPMN support
+
+import BPMN example process
+
+    make import bpmn=examples/check.bpmn
+
+start process
+
+    make cli
+    flow_check=# INSERT INTO flow.input (process,data) values ('bpmnSupport', '{"confirm":"check this"}');
+
+create flow vizualisation of the example process
+
+    bin/viz.sh flow_check . bpmnSupport
+    firefox ./bpmnSupport.svg
 
 ## Resources
 

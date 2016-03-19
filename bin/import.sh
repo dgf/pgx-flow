@@ -7,5 +7,5 @@ elif [ ! -r "${file}" ]; then
   echo "file '${file} not readable"
 else
   bpmn=$(cat ${file})
-  psql ${db} -c "SELECT * FROM flow.import('${bpmn}')"
+  psql ${db} -c "SELECT * FROM bpmn.import('${bpmn}')"
 fi

@@ -29,6 +29,7 @@ act: schema    # install default activities
 
 flow: act      # install flow triggers and functions
 	psql $(dbName) -f flow.sql
+	psql $(dbName) -f bpmn.sql
 
 run:           # start asynchronous notification handler
 	perl call.pl
