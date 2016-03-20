@@ -1,0 +1,83 @@
+digraph graph_flow {
+  compound=true
+
+  subgraph cluster_flow {
+    label="Flow"
+    start [shape=circle, label=""]
+
+    // tables
+    node [shape=box, style=solid]
+    branch [label="branch"]
+    input [label="input"]
+    instance [label="instance"]
+    state [label="state"]
+
+    // functions
+    node [shape=box, style=rounded]
+    call_activity [label="call_activity()"]
+    close_activity [label="close_activity()"]
+    log_state [label="log_state()"]
+    start_flow [label="start_flow()"]
+
+    // trigger
+    input -> start_flow [label="<trigger>\nBEFORE INSERT\nflow_input"]
+    state -> call_activity [label="<trigger>\nAFTER INSERT\nactivity_call"]
+    state -> close_activity [label="<trigger>\nAFTER UPDATE\nactivity_update"]
+
+    // flow
+    call_activity -> state [label="UPDATE"]
+    close_activity -> branch [label="INSERT\nSELECT\nUPDATE"]
+    close_activity -> log_state [label="PERFORM"]
+    log_state -> state [label="INSERT"]
+    start_flow -> {instance; branch} [label="INSERT"]
+    start_flow -> log_state [label="PERFORM"]
+
+    // layout
+    {rank=same; input instance branch}
+    {rank=same; start_flow close_activity call_activity}
+    {rank=same; log_state state}
+  }
+
+  subgraph cluster_activities {
+    label="Activities"
+
+    // tables
+    node [shape=box, style=solid]
+    call [label="call"]
+    log [label="log"]
+    task [label="task"]
+
+    // functions
+    node [shape=box, style=rounded]
+    activity_function [label="[activity.func]()"]
+    finish_call [label="finish_call()"]
+    finish_task [label="finish_task()"]
+    http_activity [label="http()"]
+    log_activity [label="log()"]
+    mail_activity [label="mail()"]
+    task_activity [label="task()"]
+
+    // trigger
+    call -> finish_call [label="<trigger>\nAFTER UPDATE\ncall_done"]
+    task -> finish_task [label="<trigger>\nAFTER UPDATE\ntask_done"]
+
+    // flow
+    http_activity -> call [label="INSERT"]
+    log_activity -> log [label="INSERT"]
+    mail_activity -> call [label="INSERT"]
+    task_activity -> task [label="INSERT"]
+
+    // implements
+    edge [arrowtail=empty, dir=back]
+    activity_function -> http_activity
+    activity_function -> log_activity
+    activity_function -> mail_activity
+    activity_function -> task_activity
+  }
+
+  call_activity -> activity_function [label="EXECUTE", lhead=cluster_activities]
+  finish_task -> state [label="UPDATE"]
+  finish_call -> state [label="UPDATE"]
+  start -> input [label="INSERT"]
+}
+

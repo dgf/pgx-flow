@@ -61,4 +61,5 @@ viz:           # install dependency analyzer and flow vizualisation
 
 doc: viz       # export ERD and flow diagrams
 	bin/deps.sh $(dbName) $(shell pwd)/doc/img/deps
+	dot -Tsvg $(shell pwd)/doc/flow.dot -o $(shell pwd)/doc/img/flow.svg
 	$(foreach process, $(processes), bin/viz.sh $(dbName) $(shell pwd)/doc/img $(process).example;)
