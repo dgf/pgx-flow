@@ -4,12 +4,14 @@ digraph graph_flow {
   subgraph cluster_flow {
     label="Flow"
     start [shape=circle, label=""]
+    end [shape=doublecircle, label=""]
 
     // tables
     node [shape=box, style=solid]
     branch [label="branch"]
     input [label="input"]
     instance [label="instance"]
+    output [label="output"]
     state [label="state"]
 
     // functions
@@ -28,12 +30,16 @@ digraph graph_flow {
     call_activity -> state [label="UPDATE"]
     close_activity -> branch [label="INSERT\nSELECT\nUPDATE"]
     close_activity -> log_state [label="PERFORM"]
+    close_activity -> output [label="INSERT"]
     log_state -> state [label="INSERT"]
+    output -> end
     start_flow -> {instance; branch} [label="INSERT"]
     start_flow -> log_state [label="PERFORM"]
+    start -> input [label="INSERT"]
 
     // layout
-    {rank=same; input instance branch}
+    {rank=same; start end}
+    {rank=same; input instance branch output}
     {rank=same; start_flow close_activity call_activity}
     {rank=same; log_state state}
   }
@@ -78,6 +84,5 @@ digraph graph_flow {
   call_activity -> activity_function [label="EXECUTE", lhead=cluster_activities]
   finish_task -> state [label="UPDATE"]
   finish_call -> state [label="UPDATE"]
-  start -> input [label="INSERT"]
 }
 

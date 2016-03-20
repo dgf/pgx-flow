@@ -104,11 +104,16 @@ CREATE FUNCTION close_activity()
         WHERE f.process = uri AND f.source = NEW.activity AND f.expression IS NULL;
       END IF;
 
+      -- end => output
+      IF NEW.activity = 'end' THEN
+        INSERT INTO output (instance, process, data)
+        VALUES(NEW.instance, NEW.process, NEW.data);
+
       --  keep the flow
-      IF array_length(steps, 1) > 0 THEN
+      ELSEIF cardinality(steps) > 0 THEN
 
         -- remember branch count
-        UPDATE branch SET gates = array_length(steps, 1)
+        UPDATE branch SET gates = cardinality(steps)
         WHERE instance = NEW.instance AND num = NEW.branch;
 
         -- check next steps
@@ -131,7 +136,7 @@ CREATE FUNCTION close_activity()
 
             -- one prev => next on same branch
             IF prev_count = 1 THEN
-              IF array_length(acts, 1) = 1 THEN
+              IF cardinality(acts) = 1 THEN
                 wait := false;
                 bn := NEW.branch;
                 data := acts[1].data;
@@ -145,16 +150,14 @@ CREATE FUNCTION close_activity()
               WHERE b.instance = NEW.instance AND b.num = NEW.branch;
 
               -- one active prev => next on same branch
-              IF parent IS NULL OR parent.gates = 1 THEN
-                IF array_length(acts, 1) = 1 THEN
-                  wait := false;
-                  bn := NEW.branch;
-                  data := acts[1].data;
-                END IF;
+              IF (parent IS NULL OR parent.gates = 1) AND cardinality(acts) = 1 THEN
+                wait := false;
+                bn := NEW.branch;
+                data := acts[1].data;
 
               -- check finished previous count => next on parent branch
               ELSE
-                IF parent.gates = array_length(acts, 1) THEN
+                IF parent.gates = cardinality(acts) THEN
                   wait := false;
                   bn := parent.num;
 
@@ -170,7 +173,7 @@ CREATE FUNCTION close_activity()
             IF NOT wait THEN
 
               -- branch?
-              IF array_length(steps, 1) > 1 THEN
+              IF cardinality(steps) > 1 THEN
                 SELECT max(num) + 1 INTO bn FROM branch
                 WHERE instance = NEW.instance;
                 INSERT INTO branch (instance, parent, num, label)

@@ -123,6 +123,14 @@ CREATE TABLE input (
   PRIMARY KEY (uid)
 );
 
+CREATE TABLE output (
+  instance    uuid      NOT NULL REFERENCES instance(uid),
+  process     text      NOT NULL REFERENCES process(uri),
+  data        json      NOT NULL,
+  created     timestamp DEFAULT now(),
+  PRIMARY KEY (instance)
+);
+
 CREATE FUNCTION process_uri(instance_uid uuid)
   RETURNS text AS $$
   DECLARE uri text;
