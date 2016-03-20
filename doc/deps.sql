@@ -109,6 +109,6 @@ CREATE VIEW dependency_list AS (
 );
 
 CREATE VIEW dependency_graph AS (
-  SELECT ownertable || ' -> ' || oname || ' [label="' || refname || '"];' FROM dependency_list
+  SELECT ownertable || ' -> ' || oname || ' [label="' || refname || '"];' FROM dependency_list ORDER BY ownertable, oname, refname
 );
 
