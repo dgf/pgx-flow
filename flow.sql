@@ -5,7 +5,7 @@ CREATE FUNCTION start_flow()
   RETURNS TRIGGER AS $$
   BEGIN
     SET search_path TO flow, public; -- TODO set path of all application schemas
-    IF TG_TABLE_NAME != 'input' OR TG_OP != 'INSERT' OR TG_WHEN != 'BEFORE' THEN
+    IF TG_TABLE_NAME != 'input' OR TG_OP != 'INSERT' OR TG_WHEN != 'AFTER' THEN
       PERFORM log_error(NEW.uid, 'start', '{"message":"invalid start flow trigger call"}');
     ELSE
       INSERT INTO instance (uid, process) VALUES (NEW.uid, NEW.process);
@@ -17,7 +17,7 @@ CREATE FUNCTION start_flow()
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER flow_input
-  BEFORE INSERT ON input
+  AFTER INSERT ON input
   FOR EACH ROW
   EXECUTE PROCEDURE start_flow();
 
@@ -39,9 +39,8 @@ CREATE FUNCTION call_activity()
         EXECUTE 'SELECT * FROM ' || quote_ident(a.func) || '($1, $2, $3, $4)'
         USING NEW.instance, NEW.activity, a.config, NEW.data;
       END IF;
-      IF NOT a.async THEN
-        -- call update to trigger the close function
-        UPDATE state SET await = false
+      IF NOT a.async THEN -- synchronous update triggers the close function
+        UPDATE state SET await = false -- TODO merge data result
         WHERE instance = NEW.instance AND activity = NEW.activity AND await = true;
       END IF;
     END IF;
@@ -195,3 +194,48 @@ CREATE TRIGGER activity_update
   AFTER UPDATE ON state
   FOR EACH ROW
   EXECUTE PROCEDURE close_activity();
+
+-- start sub process
+CREATE FUNCTION start_sub()
+  RETURNS TRIGGER AS $$
+  BEGIN
+    SET search_path TO flow, public; -- TODO set path of all application schemas
+    IF TG_WHEN != 'AFTER' OR TG_OP != 'INSERT' OR TG_TABLE_NAME != 'sub' THEN
+      PERFORM log_error(NEW.uid, 'call', '{"message":"invalid sub flow trigger call"}');
+    ELSE
+      INSERT INTO input(uid, process, data) VALUES (NEW.uid, NEW.process, NEW.data);
+    END IF;
+    RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sub_start
+  AFTER INSERT ON sub
+  FOR EACH ROW
+  EXECUTE PROCEDURE start_sub();
+
+-- finish sub process
+CREATE FUNCTION finish_sub()
+  RETURNS TRIGGER AS $$
+  DECLARE
+    s sub;
+  BEGIN
+    SET search_path TO flow, public; -- TODO set path of all application schemas
+    IF TG_WHEN != 'AFTER' OR TG_OP != 'INSERT' OR TG_TABLE_NAME != 'output' THEN
+      PERFORM log_error(NEW.uid, 'call', '{"message":"invalid sub flow finish call"}');
+    ELSE
+      SELECT * INTO s FROM sub WHERE uid = NEW.instance;
+      IF s IS NOT NULL THEN
+        UPDATE state SET await = false, data = NEW.data -- TODO merge data
+        WHERE instance = s.parent AND await = true; -- TODO join and filter activity
+      END IF;
+    END IF;
+    RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sub_finish
+  AFTER INSERT ON output
+  FOR EACH ROW
+  EXECUTE PROCEDURE finish_sub();
+

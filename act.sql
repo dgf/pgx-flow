@@ -1,5 +1,12 @@
 SET search_path TO flow, public;
 
+-- call sub process activity
+CREATE FUNCTION sub(instance uuid, activity text, config json, data json)
+  RETURNS void AS $$
+  INSERT INTO sub (parent, process, data)
+  VALUES (instance, config->>'process', data);
+$$ LANGUAGE SQL;
+
 -- notifies async call execution
 CREATE FUNCTION call()
   RETURNS TRIGGER AS $$
@@ -30,7 +37,7 @@ CREATE FUNCTION finish_call()
         IF s IS NULL THEN
           PERFORM log_error(NEW.instance, NEW.activity, '{"message":"activity call state not found"}');
         ELSE
-          UPDATE state SET await = false, data = NEW.response
+          UPDATE state SET await = false, data = NEW.response -- TODO merge data
           WHERE instance = NEW.instance AND activity = NEW.activity;
         END IF;
       END IF;

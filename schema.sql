@@ -8,13 +8,6 @@ CREATE TABLE process (
   PRIMARY KEY (uri)
 );
 
-CREATE TABLE instance (
-  uid         uuid      DEFAULT uuid_generate_v4(),
-  process     text      NOT NULL REFERENCES process(uri),
-  created     timestamp DEFAULT now(),
-  PRIMARY KEY (uid)
-);
-
 CREATE TABLE activity (
   process     text      NOT NULL REFERENCES process(uri),
   uri         text      NOT NULL,
@@ -37,6 +30,13 @@ CREATE TABLE flow (
   PRIMARY KEY (process, source, target),
   FOREIGN KEY (process, source) REFERENCES activity(process, uri),
   FOREIGN KEY (process, target) REFERENCES activity(process, uri)
+);
+
+CREATE TABLE instance (
+  uid         uuid      DEFAULT uuid_generate_v4(),
+  process     text      NOT NULL REFERENCES process(uri),
+  created     timestamp DEFAULT now(),
+  PRIMARY KEY (uid)
 );
 
 CREATE TABLE branch (
@@ -117,6 +117,15 @@ CREATE TABLE log (
 
 CREATE TABLE input (
   uid         uuid      DEFAULT uuid_generate_v4(),
+  process     text      NOT NULL REFERENCES process(uri),
+  data        json      NOT NULL,
+  created     timestamp DEFAULT now(),
+  PRIMARY KEY (uid)
+);
+
+CREATE TABLE sub (
+  uid         uuid      DEFAULT uuid_generate_v4(),
+  parent      uuid      NOT NULL REFERENCES instance(uid),
   process     text      NOT NULL REFERENCES process(uri),
   data        json      NOT NULL,
   created     timestamp DEFAULT now(),

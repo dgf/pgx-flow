@@ -3,15 +3,13 @@ digraph graph_flow {
 
   subgraph cluster_flow {
     label="Flow"
-    start [shape=circle, label=""]
-    end [shape=doublecircle, label=""]
 
     // tables
     node [shape=box, style=solid]
-    branch [label="branch"]
     input [label="input"]
-    instance [label="instance"]
     output [label="output"]
+    branch [label="branch"]
+    instance [label="instance"]
     state [label="state"]
 
     // functions
@@ -22,7 +20,7 @@ digraph graph_flow {
     start_flow [label="start_flow()"]
 
     // trigger
-    input -> start_flow [label="<trigger>\nBEFORE INSERT\nflow_input"]
+    input -> start_flow [label="<trigger>\nAFTER INSERT\nflow_input"]
     state -> call_activity [label="<trigger>\nAFTER INSERT\nactivity_call"]
     state -> close_activity [label="<trigger>\nAFTER UPDATE\nactivity_update"]
 
@@ -31,17 +29,10 @@ digraph graph_flow {
     close_activity -> branch [label="INSERT\nSELECT\nUPDATE"]
     close_activity -> log_state [label="PERFORM"]
     close_activity -> output [label="INSERT"]
+    finish_sub -> state [label="UPDATE"]
     log_state -> state [label="INSERT"]
-    output -> end
     start_flow -> {instance; branch} [label="INSERT"]
     start_flow -> log_state [label="PERFORM"]
-    start -> input [label="INSERT"]
-
-    // layout
-    {rank=same; start end}
-    {rank=same; input instance branch output}
-    {rank=same; start_flow close_activity call_activity}
-    {rank=same; log_state state}
   }
 
   subgraph cluster_activities {
@@ -52,37 +43,50 @@ digraph graph_flow {
     call [label="call"]
     log [label="log"]
     task [label="task"]
+    sub [label="sub"]
 
     // functions
     node [shape=box, style=rounded]
     activity_function [label="[activity.func]()"]
+    sub_activity [label="sub()"]
     finish_call [label="finish_call()"]
+    finish_sub [label="finish_sub()"]
     finish_task [label="finish_task()"]
     http_activity [label="http()"]
     log_activity [label="log()"]
     mail_activity [label="mail()"]
+    start_sub [label="start_sub()"]
     task_activity [label="task()"]
 
     // trigger
     call -> finish_call [label="<trigger>\nAFTER UPDATE\ncall_done"]
     task -> finish_task [label="<trigger>\nAFTER UPDATE\ntask_done"]
+    sub -> start_sub [label="<trigger>\nAFTER INSERT\nsub_start"]
 
     // flow
     http_activity -> call [label="INSERT"]
     log_activity -> log [label="INSERT"]
     mail_activity -> call [label="INSERT"]
+    sub_activity -> sub [label="INSERT"]
     task_activity -> task [label="INSERT"]
 
     // implements
-    edge [arrowtail=empty, dir=back]
-    activity_function -> http_activity
-    activity_function -> log_activity
-    activity_function -> mail_activity
-    activity_function -> task_activity
+    activity_function -> {
+      http_activity;
+      log_activity;
+      mail_activity;
+      sub_activity;
+      task_activity} [arrowtail=empty, dir=back]
+
+    // layout
+    //{rank=same; sub start_sub}
   }
 
   call_activity -> activity_function [label="EXECUTE", lhead=cluster_activities]
-  finish_task -> state [label="UPDATE"]
   finish_call -> state [label="UPDATE"]
+  finish_task -> state [label="UPDATE"]
+  start_sub -> input [label="INSERT"]
+  sub -> instance [label="parent / child"]
+  output -> finish_sub [label="<trigger>\nAFTER INSERT\nsub_done"]
 }
 

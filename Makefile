@@ -44,7 +44,7 @@ import: $(bpmn)# import BPMN
 cli:           # open psql terminal
 	psql $(dbName)
 
-processes = log task mail http parallel condition
+processes = log task mail http parallel condition sub
 
 specs = expression
 
