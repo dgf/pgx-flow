@@ -27,6 +27,7 @@ CREATE FUNCTION call_activity()
   DECLARE
     a activity;
     f flow;
+    fn func;
     p process;
   BEGIN
     IF TG_TABLE_NAME != 'state' OR TG_OP != 'INSERT' OR TG_WHEN != 'AFTER' THEN
@@ -35,11 +36,12 @@ CREATE FUNCTION call_activity()
       IF NEW.await THEN
         SELECT * INTO a FROM activity
         JOIN instance ON instance.process = activity.process
-        WHERE instance.uid = NEW.instance AND uri = NEW.activity;
+        WHERE instance.uid = NEW.instance AND name = NEW.activity;
         EXECUTE 'SELECT * FROM ' || quote_ident(a.func) || '($1, $2, $3, $4)'
         USING NEW.instance, NEW.activity, a.config, NEW.data;
       END IF;
-      IF NOT a.async THEN -- synchronous update triggers the close function
+      SELECT * FROM func WHERE name = a.func INTO fn;
+      IF NOT fn.async THEN -- synchronous update triggers the close function
         UPDATE state SET await = false -- TODO merge data result
         WHERE instance = NEW.instance AND activity = NEW.activity AND await = true;
       END IF;

@@ -12,22 +12,34 @@
     <bpmn:sequenceFlow id="exclusive2parallel" sourceRef="exclusiveEnd" targetRef="parallelEnd" />
     <bpmn:sequenceFlow id="log2http" sourceRef="logBranchOne" targetRef="httpRequest" />
     <bpmn:userTask id="taskOne" name="task 1">
-      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 1"}]]></bpmn:documentation>
+      <bpmn:documentation><![CDATA[{
+"group":"test",
+"subject":"confirm task 1"
+}]]></bpmn:documentation>
       <bpmn:incoming>http2taskOne</bpmn:incoming>
       <bpmn:outgoing>one2parallel</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="taskTwo" name="task 2">
-      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 2"}]]></bpmn:documentation>
+      <bpmn:documentation><![CDATA[{
+"group":"test",
+"subject":"confirm task 2"
+}]]></bpmn:documentation>
       <bpmn:incoming>exclusive2two</bpmn:incoming>
       <bpmn:outgoing>two2exclusive</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="taskThree" name="task 3">
-      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 3"}]]></bpmn:documentation>
+      <bpmn:documentation><![CDATA[{
+"group":"test",
+"subject":"confirm task 3"
+}]]></bpmn:documentation>
       <bpmn:incoming>exclusive2three</bpmn:incoming>
       <bpmn:outgoing>three2exclusive</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:serviceTask id="logBranchOne" name="log branch 1" camunda:delegateExpression="log">
-      <bpmn:documentation><![CDATA[{"level":"INFO","message":"log branch 1"} ]]></bpmn:documentation>
+    <bpmn:serviceTask id="logBranchOne" name="log branch 1" camunda:expression="log">
+      <bpmn:documentation><![CDATA[{
+"level":"INFO",
+"message":"log branch 1"
+} ]]></bpmn:documentation>
       <bpmn:incoming>parallel2logOne</bpmn:incoming>
       <bpmn:outgoing>log2http</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -37,8 +49,11 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[count > 1]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="log2exclusive" sourceRef="logBranchTwo" targetRef="exclusiveStart" />
-    <bpmn:serviceTask id="logBranchTwo" name="log branch 2" camunda:delegateExpression="log">
-      <bpmn:documentation><![CDATA[{"level":"INFO","message":"log branch 2"} ]]></bpmn:documentation>
+    <bpmn:serviceTask id="logBranchTwo" name="log branch 2" camunda:expression="log">
+      <bpmn:documentation><![CDATA[{
+"level":"INFO",
+"message":"log branch 2"
+} ]]></bpmn:documentation>
       <bpmn:incoming>parallel2logTwo</bpmn:incoming>
       <bpmn:outgoing>log2exclusive</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -50,8 +65,11 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">count = 2</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="http2taskOne" sourceRef="httpRequest" targetRef="taskOne" />
-    <bpmn:serviceTask id="httpRequest" name="async http request" camunda:type="external" camunda:topic="http">
-      <bpmn:documentation><![CDATA[{"method":"get"}]]></bpmn:documentation>
+    <bpmn:serviceTask id="httpRequest" name="async http request" camunda:expression="http" camunda:resultVariable="response">
+      <bpmn:documentation><![CDATA[{
+"method":"get",
+"url":"https://httpbin.org/get"
+}]]></bpmn:documentation>
       <bpmn:incoming>log2http</bpmn:incoming>
       <bpmn:outgoing>http2taskOne</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -80,7 +98,10 @@
     <bpmn:sequenceFlow id="exclusive2four" name="&#60; 2" sourceRef="exclusiveStart" targetRef="taskFour" />
     <bpmn:sequenceFlow id="four2exclusive" sourceRef="taskFour" targetRef="exclusiveEnd" />
     <bpmn:userTask id="taskFour" name="task 4">
-      <bpmn:documentation><![CDATA[{"group":"test","subject":"confirm task 4"}]]></bpmn:documentation>
+      <bpmn:documentation><![CDATA[{
+"group":"test",
+"subject":"confirm task 4"
+}]]></bpmn:documentation>
       <bpmn:incoming>exclusive2four</bpmn:incoming>
       <bpmn:outgoing>four2exclusive</bpmn:outgoing>
     </bpmn:userTask>
@@ -101,15 +122,15 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="EndEvent_13oxwf0_di" bpmnElement="end">
-        <dc:Bounds x="860" y="33" width="36" height="36" />
+        <dc:Bounds x="909" y="33" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="833" y="69" width="90" height="20" />
+          <dc:Bounds x="882" y="69" width="90" height="20" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0qbxqfx_di" bpmnElement="exclusive2parallel">
         <di:waypoint xsi:type="dc:Point" x="775" y="273" />
-        <di:waypoint xsi:type="dc:Point" x="802" y="273" />
-        <di:waypoint xsi:type="dc:Point" x="802" y="76" />
+        <di:waypoint xsi:type="dc:Point" x="822" y="273" />
+        <di:waypoint xsi:type="dc:Point" x="822" y="76" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1319" y="41" width="90" height="20" />
         </bpmndi:BPMNLabel>
@@ -182,15 +203,15 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1w5miok_di" bpmnElement="parallel2end">
-        <di:waypoint xsi:type="dc:Point" x="827" y="51" />
-        <di:waypoint xsi:type="dc:Point" x="860" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="847" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="909" y="51" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="871" y="95" width="90" height="20" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1y7pl6a_di" bpmnElement="one2parallel">
         <di:waypoint xsi:type="dc:Point" x="656" y="51" />
-        <di:waypoint xsi:type="dc:Point" x="777" y="51" />
+        <di:waypoint xsi:type="dc:Point" x="797" y="51" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="673" y="41" width="90" height="20" />
         </bpmndi:BPMNLabel>
@@ -220,9 +241,9 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ParallelGateway_16f39pk_di" bpmnElement="parallelEnd">
-        <dc:Bounds x="777" y="26" width="50" height="50" />
+        <dc:Bounds x="797" y="26" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="757" y="76" width="90" height="20" />
+          <dc:Bounds x="777" y="76" width="90" height="20" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ExclusiveGateway_092qii3_di" bpmnElement="exclusiveStart" isMarkerVisible="true">

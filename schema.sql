@@ -8,15 +8,22 @@ CREATE TABLE process (
   PRIMARY KEY (uri)
 );
 
+CREATE TABLE func (
+  name        text      NOT NULL,
+  async       boolean   NOT NULL,
+  description text      NOT NULL,
+  created     timestamp DEFAULT now(),
+  PRIMARY KEY (name)
+);
+
 CREATE TABLE activity (
   process     text      NOT NULL REFERENCES process(uri),
-  uri         text      NOT NULL,
-  func        text      NOT NULL,
-  async       boolean   DEFAULT false,
+  name        text      NOT NULL,
+  func        text      NOT NULL REFERENCES func(name),
   config      json      NOT NULL,
   description text      NOT NULL,
   created     timestamp DEFAULT now(),
-  PRIMARY KEY (process, uri)
+  PRIMARY KEY (process, name)
 );
 
 CREATE TABLE flow (
@@ -28,8 +35,8 @@ CREATE TABLE flow (
   description text,
   created     timestamp DEFAULT now(),
   PRIMARY KEY (process, source, target),
-  FOREIGN KEY (process, source) REFERENCES activity(process, uri),
-  FOREIGN KEY (process, target) REFERENCES activity(process, uri)
+  FOREIGN KEY (source, process) REFERENCES activity(name, process),
+  FOREIGN KEY (target, process) REFERENCES activity(name, process)
 );
 
 CREATE TABLE instance (
@@ -58,8 +65,8 @@ CREATE TABLE state (
   data        json      NOT NULL,
   created     timestamp DEFAULT now(),
   PRIMARY KEY (instance, activity, branch), -- prevent endless loop
-  FOREIGN KEY (instance, branch) REFERENCES branch(instance, num),
-  FOREIGN KEY (process, activity) REFERENCES activity(process, uri)
+  FOREIGN KEY (branch, instance) REFERENCES branch(num, instance),
+  FOREIGN KEY (activity, process) REFERENCES activity(name, process)
 );
 
 CREATE TYPE status AS ENUM ('new', 'open', 'done');
@@ -70,12 +77,12 @@ CREATE TABLE call (
   process     text      NOT NULL,
   activity    text      NOT NULL,
   status      status    NOT NULL DEFAULT 'new',
-  func        text      NOT NULL,
+  func        text      NOT NULL REFERENCES func(name),
   request     json      NOT NULL,
   response    json      CHECK (status <> 'done' OR NOT NULL),
   created     timestamp DEFAULT now(),
   PRIMARY KEY (uid),
-  FOREIGN KEY (process, activity) REFERENCES activity(process, uri)
+  FOREIGN KEY (activity, process) REFERENCES activity(name, process)
 );
 
 CREATE TABLE task (
@@ -90,7 +97,7 @@ CREATE TABLE task (
   data        json,
   created     timestamp DEFAULT now(),
   PRIMARY KEY (uid),
-  FOREIGN KEY (process, activity) REFERENCES activity(process, uri)
+  FOREIGN KEY (activity, process) REFERENCES activity(name, process)
 );
 
 CREATE TABLE error (
@@ -100,7 +107,7 @@ CREATE TABLE error (
   activity    text      NOT NULL,
   data        json      NOT NULL,
   created     timestamp DEFAULT now(),
-  FOREIGN KEY (process, activity) REFERENCES activity(process, uri)
+  FOREIGN KEY (activity, process) REFERENCES activity(name, process)
 );
 
 CREATE TABLE log (
@@ -112,7 +119,7 @@ CREATE TABLE log (
   level       text      NOT NULL,
   message     text      NOT NULL,
   data        json      NOT NULL,
-  FOREIGN KEY (process, activity) REFERENCES activity(process, uri)
+  FOREIGN KEY (activity, process) REFERENCES activity(name, process)
 );
 
 CREATE TABLE input (

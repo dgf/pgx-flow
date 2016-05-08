@@ -1,5 +1,12 @@
 SET search_path TO flow, public;
 
+INSERT INTO func (name, async, description) VALUES
+  ('http', true, 'HTTP request'),
+  ('log', false, 'create log entry'),
+  ('mail', true, 'send mail'),
+  ('sub', true, 'call sub process'),
+  ('task', true, 'create task');
+
 -- call sub process activity
 CREATE FUNCTION sub(instance uuid, activity text, config json, data json)
   RETURNS void AS $$

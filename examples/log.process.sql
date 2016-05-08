@@ -6,7 +6,7 @@ DO $$
     INSERT INTO process (uri, description) VALUES
       ('log.example', 'a sequential process with one synchronous log activity');
 
-    INSERT INTO activity (process, uri, func, description, config) VALUES
+    INSERT INTO activity (process, name, func, description, config) VALUES
       ('log.example', 'start', 'log', 'log start data', '{"level":"INFO","message":"start log example process"}'),
       ('log.example', 'call', 'log', 'log actual token data', '{"level":"INFO","message":"synchronous log call"}'),
       ('log.example', 'end', 'log', 'log end data', '{"level":"INFO","message":"end log example process"}');

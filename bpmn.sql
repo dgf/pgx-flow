@@ -56,6 +56,44 @@ CREATE FUNCTION xml_decode(INOUT value text) AS $$
   END;
 $$ LANGUAGE plpgsql;
 
+--
+-- BPMN import function
+--
+-- bpmn:process
+--   id = process.uri
+--   name = process.description
+--
+-- bpmn:startEvent
+--   'start' = activity.name
+--   'log' = activity.func
+--
+-- bpmn:endEvent
+--   'end' = activity.name
+--   'log' = activity.func
+--
+-- bpmn:serviceTask
+--   id = activity.name
+--   name = activity.description
+--   camunda:expression = activity.func
+--   bpmn:documentation = activity.config
+--
+-- userTask
+--   id = activity.name
+--   name = activity.description
+--   bpmn:documentation = activity.config
+--
+-- bpmn:parallelGateway and bpmn:exclusiveGateway
+--   id = activity.name
+--   'log' = activity.func
+--   starts 1 bpmn:incoming + X bpmn:outgoing
+--   ends   X bpmn:incoming + 1 bpmn:outgoing
+--
+-- bpmn:sequenceFlow
+--   name = flow.label
+--   sourceRef = flow.source
+--   targetRef = flow.target
+--   bpmn:conditionExpression = flow.expression
+--
 CREATE FUNCTION import(bpmn xml)
   RETURNS flow.process AS $$
   DECLARE
@@ -93,6 +131,7 @@ CREATE FUNCTION import(bpmn xml)
     END IF;
 
     -- create start event
+--      result name = attribute camunda:resultVariable
     SELECT xpath('//bpmn:startEvent', bpmn, ns) INTO xp;
     len := array_length(xp, 1);
     IF len = 0 THEN
@@ -100,8 +139,8 @@ CREATE FUNCTION import(bpmn xml)
     ELSEIF len > 1 THEN
       RAISE 'only one start event supported, found %', len;
     ELSE
-      c := json_build_object('level', 'INFO', 'message', 'start ' || p.uri || '"}');
-      INSERT INTO activity (process, uri, func, description, config)
+      c := json_build_object('level', 'INFO', 'message', 'start ' || p.uri);
+      INSERT INTO activity (process, name, func, description, config)
       VALUES (p.uri, 'start', 'log', 'log start', c);
     END IF;
 
@@ -113,8 +152,8 @@ CREATE FUNCTION import(bpmn xml)
     ELSEIF len > 1 THEN
       RAISE 'only one end event supported';
     ELSE
-      c := json_build_object('level', 'INFO', 'message', 'end ' || p.uri || '"}');
-      INSERT INTO activity (process, uri, func, description, config)
+      c := json_build_object('level', 'INFO', 'message', 'end ' || p.uri);
+      INSERT INTO activity (process, name, func, description, config)
       VALUES (p.uri, 'end', 'log', 'log end', c);
     END IF;
 
@@ -125,17 +164,13 @@ CREATE FUNCTION import(bpmn xml)
       id := attribute(x, 'bpmn:serviceTask', 'id', ns);
       name := xml_decode(attribute(x, 'bpmn:serviceTask', 'name', ns));
       c := xml_decode(xpath_text(x, 'bpmn:documentation', ns));
-      IF exist(x, 'bpmn:serviceTask', 'camunda:delegateExpression', ns) THEN
-        async := false;
-        func := attribute(x, 'bpmn:serviceTask', 'camunda:delegateExpression', ns);
-      ELSEIF exist(x, 'bpmn:serviceTask', 'camunda:topic', ns) THEN
-        async := true;
-        func := attribute(x, 'bpmn:serviceTask', 'camunda:topic', ns);
+      IF exist(x, 'bpmn:serviceTask', 'camunda:expression', ns) THEN
+        func := attribute(x, 'bpmn:serviceTask', 'camunda:expression', ns);
       ELSE
         RAISE 'no function reference for service task "%" found', id;
       END IF;
-      INSERT INTO activity (process, uri, func, async, description, config)
-      VALUES (p.uri, id, func, async, name, c);
+      INSERT INTO activity (process, name, func, description, config)
+      VALUES (p.uri, id, func, name, c);
     END LOOP;
 
     -- create user task activities
@@ -145,8 +180,8 @@ CREATE FUNCTION import(bpmn xml)
       id := attribute(x, 'bpmn:userTask', 'id', ns);
       name := xml_decode(attribute(x, 'bpmn:userTask', 'name', ns));
       c := xml_decode(xpath_text(x, 'bpmn:documentation', ns));
-      INSERT INTO activity (process, uri, func, async, description, config)
-      VALUES (p.uri, id, 'task', true, name, c);
+      INSERT INTO activity (process, name, func, description, config)
+      VALUES (p.uri, id, 'task', name, c);
     END LOOP;
 
     -- create parallel gateway activities
@@ -160,13 +195,13 @@ CREATE FUNCTION import(bpmn xml)
         name := xml_decode(attribute(x, 'bpmn:parallelGateway', 'name', ns));
       END IF;
       IF xpath_count(x, 'bpmn:outgoing', ns) > 1 THEN
-        c := json_build_object('level', 'INFO', 'message', 'parallel start ' || id || '"}');
+        c := json_build_object('level', 'INFO', 'message', 'parallel start ' || id);
       ELSEIF xpath_count(x, 'bpmn:incoming', ns) > 1 THEN
-        c := json_build_object('level', 'INFO', 'message', 'parallel end ' || id || '"}');
+        c := json_build_object('level', 'INFO', 'message', 'parallel end ' || id);
       ELSE
         RAISE 'useless parallel gateway "%" found', id;
       END IF;
-      INSERT INTO activity (process, uri, func, description, config)
+      INSERT INTO activity (process, name, func, description, config)
       VALUES (p.uri, id, 'log', name, c);
     END LOOP;
 
@@ -181,13 +216,13 @@ CREATE FUNCTION import(bpmn xml)
         name := xml_decode(attribute(x, 'bpmn:exclusiveGateway', 'name', ns));
       END IF;
       IF xpath_count(x, 'bpmn:outgoing', ns) > 1 THEN
-        c := json_build_object('level', 'INFO', 'message', 'exclusive start ' || id || '"}');
+        c := json_build_object('level', 'INFO', 'message', 'exclusive start ' || id);
       ELSEIF xpath_count(x, 'bpmn:incoming', ns) > 1 THEN
-        c := json_build_object('level', 'INFO', 'message', 'exclusive end ' || id || '"}');
+        c := json_build_object('level', 'INFO', 'message', 'exclusive end ' || id);
       ELSE
         RAISE 'useless exclusive gateway "%" found', id;
       END IF;
-      INSERT INTO activity (process, uri, func, description, config)
+      INSERT INTO activity (process, name, func, description, config)
       VALUES (p.uri, id, 'log', name, c);
     END LOOP;
 
